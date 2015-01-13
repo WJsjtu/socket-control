@@ -22,5 +22,5 @@ To install module
 ```
 To run ccdaemon
 ``` c
-    ./ccdaemon black.josn
+    ./ccdaemon black.json
 ```
