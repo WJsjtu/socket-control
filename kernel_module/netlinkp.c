@@ -4,7 +4,7 @@
 #include <net/netlink.h>
 #include <linux/sched.h>
 
-#include "struct.h"
+#include "./../daemon/struct.h"
 
 #define TASK_COMM_LEN 16
 
@@ -30,7 +30,10 @@ static void netlink_kernel_recv(struct sk_buff *skb)
     struct sk_buff *out_skb;  
     void *out_payload;  
     struct nlmsghdr *out_nlh;  
-    int payload_len; // with padding, but ok for echo   
+    int payload_len; // with padding, but ok for echo
+    long content_addr; 
+    int l;
+
     nlh = nlmsg_hdr(skb);  
     switch(nlh->nlmsg_type)  
     {  
@@ -55,14 +58,13 @@ static void netlink_kernel_recv(struct sk_buff *skb)
             }
             out_payload = nlmsg_data(out_nlh);
 
-            long content_addr; 
-            strict_strtoul(payload, 10, &content_addr);
+            kstrtoul(payload, 10, &content_addr);
             memcpy(&k_config, (_CC_Config *)content_addr, sizeof(_CC_Config));
             printk("[Module:rule]: TCP: \t%d\n", k_config.TCP);
             printk("[Module:rule]: UDP: \t%d\n", k_config.UDP);
             printk("[Module:rule]: Len: \t%d\n", k_config.length);
             printk("[Module:rule]: Port: \t%d\n", k_config.port);
-            int l;
+
             for(l = 0; l < k_config.length; l++){
                 printk("[Module:rule]: Site: \t%s:%d\n", k_config.arr[l].IP, k_config.arr[l].port);
             }
@@ -124,10 +126,11 @@ void netlink_init(void)
     k_config.UDP = 0;
     k_config.port = -1;
     k_config.length = 0;
-    printk("[Module:3]: begin to initialize netlink in kernel\n");
     struct netlink_kernel_cfg nlcfg = {  
         .input = netlink_kernel_recv,  
-    };  
+    }; 
+    printk("[Module:3]: begin to initialize netlink in kernel\n");
+     
     sk = netlink_kernel_create(&init_net, NETLINK_TEST, &nlcfg); 
     if (!sk) {  
         printk("[Module:3]: netlink create error!\n");  
@@ -143,4 +146,3 @@ void netlink_release(void) {
 	netlink_kernel_release(sk);
     }
 }
-

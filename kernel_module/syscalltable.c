@@ -28,7 +28,9 @@ void *get_sys_call_table(void)
     void *system_call = get_system_call();
     unsigned char *p;
     unsigned long sct;
-    int count = 0;
+    int count;
+    
+    count = 0;
     p = (unsigned char *) system_call;
     //"\xff\x14\x85" call 指令
     while (!((*p == 0xff) && (*(p+1) == 0x14) && (*(p+2) == 0x85))){
@@ -52,9 +54,9 @@ void *get_sys_call_table(void)
 // clear WP bit of CR0, and return the original value
 unsigned int clear_and_return_cr0(void)
 {
+    unsigned int cr0, ret;
     printk("[Module:1]: clearing WP bit of CR0\n");
-    unsigned int cr0 = 0;
-    unsigned int ret;
+    cr0 = 0;
     asm volatile ("movl %%cr0, %%eax" : "=a"(cr0));
     ret = cr0;
     /* clear the 20 bit of CR0, a.k.a WP bit */

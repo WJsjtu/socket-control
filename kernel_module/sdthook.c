@@ -16,7 +16,7 @@
 #include <linux/in.h>
 #include <linux/socket.h>
 
-#include "struct.h"
+#include "./../daemon/struct.h"
 
 MODULE_LICENSE("GPL");
 #define AL(x) ((x) * sizeof(unsigned long))
@@ -66,6 +66,8 @@ asmlinkage long hacked_sys_socketcall(int call, unsigned long __user *args)
     int len;
     int site_loop;
     char commandname[32];
+    _CC_Config *k_config;
+
     //调用指令超出范围
     if (call < 1 || call > SYS_RECVMMSG)
         return -EINVAL;
@@ -80,7 +82,7 @@ asmlinkage long hacked_sys_socketcall(int call, unsigned long __user *args)
     a1 = a[1];
     strncpy(commandname,current->comm,32);
 
-    _CC_Config *k_config = get_config();
+    k_config = get_config();
 
     switch (call) {
         case SYS_SOCKET:
@@ -172,8 +174,9 @@ asmlinkage long hacked_sys_socketcall(int call, unsigned long __user *args)
 
 static int __init connect_control_init(void)
 {
+    unsigned int orig_cr0;
     printk("[Module:init]: entrance of the kernel module\n");
-    unsigned int orig_cr0 = clear_and_return_cr0();
+    orig_cr0 = clear_and_return_cr0();
     sys_call_table = get_sys_call_table();
     orig_sys_socketcall = sys_call_table[__NR_socketcall];
     printk("[Module:init]: store the syscall : %x\n", (unsigned int)orig_sys_socketcall);
@@ -187,8 +190,9 @@ static int __init connect_control_init(void)
 
 static void __exit connect_control_exit(void)
 {
+    unsigned int orig_cr0;
     printk("[Module:exit]: begin to romove kernel module\n");
-    unsigned int orig_cr0 = clear_and_return_cr0();
+    orig_cr0 = clear_and_return_cr0();
     printk("[Module:exit]: reset the syscall : %x\n", (unsigned int)orig_sys_socketcall);
     sys_call_table[__NR_socketcall] = orig_sys_socketcall;
     setback_cr0(orig_cr0);
