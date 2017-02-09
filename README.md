@@ -27,3 +27,4 @@ To run ccdaemon
 ``` c
 ./ccdaemon black.json
 ```
+**Note**: This is only a demo project, it may cause make error on x64 platform since some different integer size.
